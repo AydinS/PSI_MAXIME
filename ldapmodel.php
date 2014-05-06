@@ -57,7 +57,11 @@ public  function Connexion($uid,$password)
 				$_SESSION['mail'] = $info[0]["mail"][0];
 				$service = LdapModel::SearchServiceUtilisateur($uid);
 				if($service != 0)
-					$_SESSION['service'] = $service[0]["cn"][0]; // on récup le service
+				{
+					$_SESSION['SERVICE'] = $service[0]["cn"][0]; // on récup le service
+					$responsable= LdapModel::isResponsableService($uid);
+					$_SESSION['RESPONSABLE'] = $responsable;
+				}
 			}
 			return $ds;
 		} else {
@@ -92,7 +96,7 @@ public  function Connexion($uid,$password)
 		$result = ldap_search(
 				$ds,
 				SERVICES_TREE,
-				'(&(objectClass=groupOfUniqueNames)(uniqueMember=uid='.$uid.'))'
+				'(&(objectClass=groupOfUniqueNames)(uniqueMember=uid='.$uid.')(!(cn=Responsables)))'
 		);
 		
 		$group = ldap_get_entries($ds, $result);
@@ -108,7 +112,7 @@ public  function Connexion($uid,$password)
 	{
 		$ds=$this->ldapCon;
 
-		$group = SearchService($uid);
+		$group = LdapModel::SearchServiceUtilisateur($uid);
 		
 		if($group != 0)
 		{
@@ -117,7 +121,7 @@ public  function Connexion($uid,$password)
 			//Recherche si responsable de services
 			$result = ldap_search(
 					$ds,
-					'cn=Responsables, '.$service,
+					SERVICES_TREE,
 					'(&(objectClass=groupOfUniqueNames)(uniqueMember=uid='.$uid.'))'
 			);
 			
@@ -127,14 +131,14 @@ public  function Connexion($uid,$password)
 		if($group["count"] > 0)
 			return true;
 		else
-			return 0;
+			return false;
 	}
 	
 	public function DelResponsableService($uid)
 	{
 		$ds=$this->ldapCon;
 
-		$group = SearchService($uid);
+		$group = LdapModel::SearchServiceUtilisateur($uid);
 		
 		if($group != 0)
 		{
@@ -161,7 +165,7 @@ public  function Connexion($uid,$password)
 	{
 		$ds=$this->ldapCon;
 
-		$group = SearchService($uid);
+		$group = LdapModel::SearchServiceUtilisateur;
 		
 		$entry['uniqueMember'] = "uid=".$uid;
 		
@@ -181,7 +185,7 @@ public  function Connexion($uid,$password)
 	{
 		$ds=$this->ldapCon;
 		
-		$group = SearchService($uid);
+		$group = LdapModel::SearchServiceUtilisateur;
 
 		$entry['uniqueMember'] = "uid=".$uid;
 		
@@ -198,7 +202,7 @@ public  function Connexion($uid,$password)
 	{
 		$ds=$this->ldapCon;
 		
-		$group = SearchService($uid);
+		$group = LdapModel::SearchServiceUtilisateur;
 		
 		$entry['uniqueMember'] = "uid=".$uid;
 		
